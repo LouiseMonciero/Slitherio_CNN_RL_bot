@@ -5,10 +5,11 @@ import os
 import mss
 from pynput import keyboard
 from pynput.mouse import Controller
-
+import tkinter as tk
+from tkinter import ttk
 from utils.driver_slitherio_functions import open_slitherio, start_game, is_game_over
 from utils.predictions_score import predict_score
-from utils.enivronement import Game_slitherio, training_Window
+from utils.enivronement import Game_slitherio
 from utils.train import display_avg_score
 
 def record_selenium_window(
@@ -22,14 +23,8 @@ def record_selenium_window(
         bot_playing:bool=True,
         train:bool=True,
         ):
-    """ Params:
-        - preview : if true, will show the recording in reel time
-        - collecting:bool : if true, will save the images in a ./data folder
-        - restart_game:bool : if true, will restart the game whenever the game is over.
-    """
-
-    pos = driver.get_window_position()   # {'x': ..., 'y': ...}
-    size = driver.get_window_size()      # {'width': ..., 'height': ...}
+    pos = driver.get_window_position()
+    size = driver.get_window_size()
 
     monitor = {
         "left": int(pos["x"]),
@@ -38,26 +33,19 @@ def record_selenium_window(
         "height": int(size["height"]),
     }
 
-    # Le bandeau du moniteur est de 15Opx environ.
     center = (
-        (size["height"] // 2) +pos["x"] + 150,
+        (size["height"] // 2) + pos["x"] + 150,
         (size["width"] // 2) + pos['y']
-    ) # (x, y)
-    
+    )
+
     mouse = Controller()
     mouse.position = (center[0] + 100, center[1])
 
     os.makedirs(images_dir, exist_ok=True)
     nb_img = 26
 
-
     stop = False
-    ep = 0 #episode / render loop number
-    env = Game_slitherio(center) # init
-
-    if train:
-        training_window = training_Window()
-        training_window.run() # is it ok
+    env = Game_slitherio(center)
 
     def on_press(key):
         nonlocal stop
@@ -74,62 +62,74 @@ def record_selenium_window(
     frame_dt = 1.0 / fps
     print("Recording window... Press ESC to stop.")
 
+    if train:
+        root = tk.Tk()
+        root.title("Training Progress")
+        scores_frame = ttk.Frame(root)
+        scores_frame.pack(padx=10, pady=10)
+
+        scores_label = ttk.Label(scores_frame, text="Scores:")
+        scores_label.pack()
+
+        scores_listbox = tk.Listbox(scores_frame, width=50, height=10)
+        scores_listbox.pack()
+
+        mean_scores_label = ttk.Label(scores_frame, text="Mean Scores:")
+        mean_scores_label.pack()
+
+        mean_scores_listbox = tk.Listbox(scores_frame, width=50, height=10)
+        mean_scores_listbox.pack()
+
+        def update_plot(scores, mean_scores):
+            scores_listbox.delete(0, tk.END)
+            for score in scores:
+                scores_listbox.insert(tk.END, score)
+
+            mean_scores_listbox.delete(0, tk.END)
+            for mean_score in mean_scores:
+                mean_scores_listbox.insert(tk.END, mean_score)
+
+        root.after(100, lambda: update_plot([], []))  # Initial call with empty data
+
     with mss.mss() as sct:
         while not stop:
             t0 = time.time()
 
-            img = np.array(sct.grab(monitor))               # BGRA
-            frame = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)   # BGR
+            img = np.array(sct.grab(monitor))
+            frame = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
 
             if preview:
                 cv2.imshow("preview", frame)
-                cv2.waitKey(1)  # juste pour rafraîchir la fenêtre
-            
+                cv2.waitKey(1)
+
             if collecting:
-                # save image
-                image_path = os.path.join(
-                    images_dir, f"screenshot{nb_img}.jpg"
-                )
-                nb_img+=1
+                image_path = os.path.join(images_dir, f"screenshot{nb_img}.jpg")
+                nb_img += 1
                 cv2.imwrite(image_path, frame)
 
             if bot_playing:
                 if is_game_over(driver):
-                    env.reset() #score = 0
+                    env.reset()
                     mouse.position = (center[0] + 100, center[1])
 
-
                     if restart:
-                        time.sleep(0.5) # wait for the button to open.
+                        time.sleep(0.5)
                         start_game(driver)
-                
 
-                # Predict score with CNN and OpenCV preprocessing
-                #score = (predict_score(frame))
                 env.render(frame, mouse.position)
-                
-                if ep % 20 == 0:
-                    training_window.update()
-
-                # the score and frame will be then used to guide the IA bot with Reinforcement Learning.
 
             dt = time.time() - t0
             if dt < frame_dt:
                 time.sleep(frame_dt - dt)
-            ep+=1
 
     if preview:
         cv2.destroyAllWindows()
 
+    if train:
+        root.mainloop()
 
 if __name__ == "__main__":
     driver = open_slitherio()
-
     driver.set_window_size(1024, 768)
-
-
-    # MAKE SURE you don't cover with anything the window of the slitherio webdriver, otherwise, the recording won't work.
-    record_selenium_window(driver, output_path="slither_window.mp4", fps=2, preview=False, collecting=False, bot_playing=True)
-    
-
+    record_selenium_window(driver, output_path="slither_window.mp4", fps=2, preview=False, collecting=False, bot_playing=True, train=True)
     driver.quit()
