@@ -52,13 +52,14 @@ cd Slitherio_CNN_RL_bot
 
 2. **Create and activate virtual environment**
 ```bash
+cd main
 python3 -m venv .venv
 source ./.venv/bin/activate
 ```
 
 3. **Install Python dependencies**
 ```bash
-pip install -r requirements.txt
+pip install -r ../requirements.txt
 ```
 
 4. **Connect to environement**
@@ -71,7 +72,7 @@ source .venv/bin/activate
 ### Run the bot
 
 ```bash
-python main/main.py
+python main.py
 ```
 
 ### Controls
