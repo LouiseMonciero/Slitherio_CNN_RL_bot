@@ -23,8 +23,9 @@ def start_game(driver):
     play_button.click()
     
     while is_game_over(driver):
-        print("wait for game to start")
-    #print("Slither.io launched")
+        ...
+        #print("wait for game to start")
+    print("Game Start")
 
 # --- START BROWSER ---
 def open_slitherio():

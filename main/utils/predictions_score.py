@@ -3,8 +3,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import pytesseract
 
-CNN_PATH = './main/model/cnn.pth'
+CNN_PATH = './model/cnn.pth'
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class ConvNet(nn.Module):
@@ -63,11 +64,17 @@ def preprocess_image(image):
     return image
 
 
-def predict_score(image):
+def predict_score(image, model=False): # As the CNN model doesn't work perfclty, it is not wet use to train the CNN RL
     
     image = preprocess_image(image)
     score = 0
     
+    if model is False :
+        try :
+            res = int(pytesseract.image_to_string(image, config='--psm 6 digits'))
+        except Exception:
+            return None
+
     # load the CNN model
     model = ConvNet().to(DEVICE)
     model.load_state_dict(torch.load(CNN_PATH, weights_only=True))
@@ -92,5 +99,5 @@ def predict_score(image):
     
     return score
 
-img = cv2.imread("./main/data/train/screenshots/screenshot4.jpg")
-print(predict_score(img))
+""" img = cv2.imread("./main/data/train/screenshots/screenshot4.jpg")
+print(predict_score(img)) """
