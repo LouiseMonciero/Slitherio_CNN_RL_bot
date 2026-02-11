@@ -52,10 +52,11 @@ def record_selenium_window(
 
     stop = False
     ep = 0 #episode / render loop number
-    env = Game_slitherio(center) # init
+    env = Game_slitherio(center, mouse.position) # init
 
     # Initialiser l'agent
     agent = None
+    prev_state = None
     if bot_playing: # harmonise plus tard avec train=True
         agent = Agent()
         # agent.load("model.pth")  # Décommenter pour charger un modèle existant
