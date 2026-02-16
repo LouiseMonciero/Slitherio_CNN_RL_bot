@@ -79,38 +79,48 @@ def verify_score(old_score, new_score):
             and diff_positions[0] != max_len - 1  # NOT the unit position
         )
 
-    def one_digit_added():
+    def digits_added():
         old_str = str(old_score)
         new_str = str(new_score)
 
-        # Il doit y avoir exactement +1 digit
-        if len(new_str) != len(old_str) + 1:
+        # new doit être strictement plus long
+        if len(new_str) <= len(old_str):
             return False
 
-        # On teste la suppression d'un digit à chaque position
-        for i in range(len(new_str)):
-            if new_str[:i] + new_str[i+1:] == old_str:
-                return True
+        # Vérifier que old est une sous-séquence de new
+        i = 0  # index pour old
 
-        return False
+        for ch in new_str:
+            if i < len(old_str) and ch == old_str[i]:
+                i += 1
+
+        return i == len(old_str)
     
     if old_score - new_score > 20 : # ou 10 en vrai...?
         # Case 1 : Regression (in slitherio, you can lose only 1 point per 1 point)
         new_score = int(old_score / 10) * 10 + new_score % 10
+        print("VERIFY SCORE ---- Regression Case")
 
     elif np.absolute(new_score - old_score) > 50 and only_one_digit_changed(): # Can happen but very not probable
         # Case 2 : Only one digit changed and is not a unit (eg. 134 -> 184)
         new_score = int(old_score / 10) * 10 + new_score % 10
-        str(new_score)
+        print("VERIFY SCORE ---- One digit changed Case")
+        
     
-    elif len(str(old_score >= 2)) and one_digit_added():
+    elif len(str(old_score >= 2)) and digits_added():
         # Case 3 : Only one digit added...
+        print("VERIFY SCORE ---- Digit + Case")
+        new_score = old_score
+    
+    elif np.absolute(new_score - old_score) > 2000 :
+        # Case 4 : Difference too big...
+        print("VERIFY SCORE ---- Diff +2000 Case")
         new_score = old_score
     
     return new_score
 
 
-def predict_score(image, model=True): # As the CNN model doesn't work perfclty, let's not wet use it to train the CNN RL
+def predict_score(image, model=False): # As the CNN model doesn't work perfclty, let's not wet use it to train the CNN RL
     
     image = preprocess_image(image)
     score = 0

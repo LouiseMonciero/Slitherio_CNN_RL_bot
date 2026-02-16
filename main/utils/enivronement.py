@@ -123,10 +123,17 @@ class Game_slitherio:
 
         self.frame = frame
         #temp = predict_score(self.frame)
-        temp = predict_score(self.frame, model=True)
-        temp = temp if temp is not None else self.score # keep the old score in order to prevent issues if the prediction was Null
-        self.score = verify_score(self.score, temp)
+        temp_cnn = predict_score(self.frame, model=True)
+        temp_cnn = temp_cnn if temp_cnn is not None else self.score # keep the old score in order to prevent issues if the prediction was Null
+        temp = predict_score(self.frame) # pytesseract
+        temp = temp if temp is not None else self.score
 
+        # Both of my model and pytesseract are not good
+        if temp_cnn != temp:
+            temp = temp_cnn if (np.abs(temp_cnn - self.score) < np.abs(temp - self.score)) else temp
+            self.score = verify_score(self.score, temp)
+        else : # if both models agree, don't verify it
+            self.score = temp
         
         # angle
         self.direction =  round(math.degrees(math.atan2(mouse_position[1] - self.absolute_center_frame[1],
@@ -189,9 +196,8 @@ class training_Window:
         
         x = list(range(len(self.scores)))
         
-        # Scatter plot avec points reliés pour les scores
-        self.ax.plot(x, self.scores, 'b-', linewidth=1, alpha=0.7)
-        self.ax.scatter(x, self.scores, c='blue', s=15, zorder=5, label='Score')
+        # Ligne simple pour les scores (sans scatter)
+        self.ax.plot(x, self.scores, 'b-', linewidth=1, alpha=0.7, label='Score')
         
         # Ligne moyenne
         self.ax.plot(x, self.mean_scores, 'r-', linewidth=1.5, label='Moyenne')
