@@ -63,8 +63,54 @@ def preprocess_image(image):
 
     return image
 
+def verify_score(old_score, new_score):
+    """If the CNN classifiaction to determine the score is not correct, prevent jumps in the score.
+        Eg. old_score=134 and new_score=734 => new_score is most likely 134
+    """
 
-def predict_score(image, model=False): # As the CNN model doesn't work perfclty, let's not wet use it to train the CNN RL
+    def only_one_digit_changed():
+        max_len = max(len(str(old_score)), len(str(new_score)))
+        old_str = str(old_score).zfill(max_len)
+        new_str = str(new_score).zfill(max_len)
+        diff_positions = [i for i in range(max_len) if old_str[i] != new_str[i]]
+
+        return (
+            len(diff_positions) == 1              # exactly one digit changed
+            and diff_positions[0] != max_len - 1  # NOT the unit position
+        )
+
+    def one_digit_added():
+        old_str = str(old_score)
+        new_str = str(new_score)
+
+        # Il doit y avoir exactement +1 digit
+        if len(new_str) != len(old_str) + 1:
+            return False
+
+        # On teste la suppression d'un digit à chaque position
+        for i in range(len(new_str)):
+            if new_str[:i] + new_str[i+1:] == old_str:
+                return True
+
+        return False
+    
+    if old_score - new_score > 20 : # ou 10 en vrai...?
+        # Case 1 : Regression (in slitherio, you can lose only 1 point per 1 point)
+        new_score = int(old_score / 10) * 10 + new_score % 10
+
+    elif np.absolute(new_score - old_score) > 50 and only_one_digit_changed(): # Can happen but very not probable
+        # Case 2 : Only one digit changed and is not a unit (eg. 134 -> 184)
+        new_score = int(old_score / 10) * 10 + new_score % 10
+        str(new_score)
+    
+    elif len(str(old_score >= 2)) and one_digit_added():
+        # Case 3 : Only one digit added...
+        new_score = old_score
+    
+    return new_score
+
+
+def predict_score(image, model=True): # As the CNN model doesn't work perfclty, let's not wet use it to train the CNN RL
     
     image = preprocess_image(image)
     score = 0
@@ -72,6 +118,7 @@ def predict_score(image, model=False): # As the CNN model doesn't work perfclty,
     if model is False :
         try :
             res = int(pytesseract.image_to_string(image, config='--psm 6 digits'))
+            return res
         except Exception:
             return None
 

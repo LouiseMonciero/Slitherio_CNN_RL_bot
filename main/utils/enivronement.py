@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-from utils.predictions_score import predict_score
+from utils.predictions_score import predict_score, verify_score
 
 
 class Game_slitherio:
@@ -124,7 +124,8 @@ class Game_slitherio:
         self.frame = frame
         #temp = predict_score(self.frame)
         temp = predict_score(self.frame, model=True)
-        self.score = temp if temp is not None else self.score # keep the old score in order to prevent issues if the prediction was Null
+        temp = temp if temp is not None else self.score # keep the old score in order to prevent issues if the prediction was Null
+        self.score = verify_score(self.score, temp)
 
         
         # angle
