@@ -122,7 +122,8 @@ class Game_slitherio:
             return seg_3_chanels(filled, 2)
 
         self.frame = frame
-        temp = predict_score(self.frame)
+        #temp = predict_score(self.frame)
+        temp = predict_score(self.frame, model=True)
         self.score = temp if temp is not None else self.score # keep the old score in order to prevent issues if the prediction was Null
 
         

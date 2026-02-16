@@ -64,7 +64,7 @@ def preprocess_image(image):
     return image
 
 
-def predict_score(image, model=False): # As the CNN model doesn't work perfclty, it is not wet use to train the CNN RL
+def predict_score(image, model=False): # As the CNN model doesn't work perfclty, let's not wet use it to train the CNN RL
     
     image = preprocess_image(image)
     score = 0

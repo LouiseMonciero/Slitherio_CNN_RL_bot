@@ -12,9 +12,8 @@ from utils.agent import Agent
 
 def record_selenium_window(
         driver, 
-        output_path="slither_window.mp4", 
         fps=20, 
-        preview:bool=True, 
+        preview:bool=True,
         collecting:bool=False, 
         images_dir='./data/screenshots/',
         restart:bool=True,
@@ -179,7 +178,14 @@ if __name__ == "__main__":
 
 
     # MAKE SURE you don't cover with anything the window of the slitherio webdriver, otherwise, the recording won't work.
-    record_selenium_window(driver, output_path="slither_window.mp4", fps=2, preview=False, collecting=False, bot_playing=True, train=True)
+    record_selenium_window(
+        driver, 
+        images_dir='./data/screenshots_more/',
+        fps=2, 
+        preview=False, 
+        collecting=True,
+        bot_playing=False, 
+        train=False)
     
 
     driver.quit()
